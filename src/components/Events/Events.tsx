@@ -107,7 +107,7 @@ const Avatar: React.FC<AvatarProps> = ({ index }) => {
 };
 
 const Events: React.FC = () => {
-  const carouselRef: RefObject<HTMLDivElement> = useRef(null);
+  const carouselRef: RefObject<HTMLDivElement | null> = useRef(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
