@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+
 import Navbar from "@/components/Navbar/Navbar";
 import HomePage from "@/components/Home/Home";
 import About from "@/components/About/About";
@@ -19,9 +19,6 @@ export default function Home() {
   const twoRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
-
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
