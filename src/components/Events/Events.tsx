@@ -118,22 +118,25 @@ const Events: React.FC = () => {
         setCurrentIndex((prevIndex) => {
           const nextIndex =
             prevIndex < eventsData.length - 1 ? prevIndex + 1 : 0;
-          if (carouselRef.current) {
-            const scrollAmount =
-              carouselRef.current.children[nextIndex].clientLeft +
-              carouselRef.current.children[nextIndex].offsetLeft;
+
+          if (carouselRef.current && carouselRef.current.children[nextIndex]) {
+            const child = carouselRef.current.children[
+              nextIndex
+            ] as HTMLElement;
+            const scrollAmount = child.clientLeft + child.offsetLeft;
             carouselRef.current.scrollTo({
               left: scrollAmount,
               behavior: "smooth",
             });
           }
+
           return nextIndex;
         });
       }, 3000);
 
       return () => clearInterval(interval);
     }
-  }, [isPaused]);
+  }, [isPaused, eventsData.length]);
 
   return (
     <div className="bg-black text-white p-4 md:p-6 lg:p-8 w-full">
@@ -245,9 +248,14 @@ const Events: React.FC = () => {
                 setIsPaused(true);
                 setTimeout(() => setIsPaused(false), 5000);
 
-                if (carouselRef.current) {
-                  const scrollAmount =
-                    carouselRef.current.children[index].offsetLeft;
+                if (
+                  carouselRef.current &&
+                  carouselRef.current.children[index]
+                ) {
+                  const child = carouselRef.current.children[
+                    index
+                  ] as HTMLElement;
+                  const scrollAmount = child.offsetLeft;
                   carouselRef.current.scrollTo({
                     left: scrollAmount,
                     behavior: "smooth",

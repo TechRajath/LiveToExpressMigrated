@@ -1,11 +1,31 @@
 import { useState, useEffect, useRef } from "react";
 
-export default function FloatingTestimonialGrid() {
-  const [cards, setCards] = useState([]);
-  const containerRef = useRef(null);
-  const animationRef = useRef(null);
+// Define TypeScript interfaces
+interface Testimonial {
+  id: number;
+  name: string;
+  username: string;
+  text: string;
+  avatar: string;
+  verified: boolean;
+  size: "small" | "medium" | "large";
+}
 
-  const testimonials = [
+interface Card extends Testimonial {
+  uniqueId: string;
+  column: number;
+  posY: number;
+  width: number;
+  speed: number;
+  opacity: number;
+}
+
+export default function FloatingTestimonialGrid() {
+  const [cards, setCards] = useState<Card[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+
+  const testimonials: Testimonial[] = [
     {
       id: 1,
       name: "Joe Mifsud",
@@ -117,7 +137,7 @@ export default function FloatingTestimonialGrid() {
   ];
 
   // Get column count based on screen width
-  const getColumnCount = () => {
+  const getColumnCount = (): number => {
     if (typeof window === "undefined") return 3;
     const width = window.innerWidth;
     if (width < 640) return 1;
@@ -126,9 +146,9 @@ export default function FloatingTestimonialGrid() {
   };
 
   // Set up initial grid layout
-  const setupInitialGrid = () => {
+  const setupInitialGrid = (): void => {
     const columns = getColumnCount();
-    const newCards = [];
+    const newCards: Card[] = [];
     const cardSpacing = 30; // vertical space between cards in pixels
     const viewportHeight = window.innerHeight;
 
@@ -164,7 +184,7 @@ export default function FloatingTestimonialGrid() {
   };
 
   // Animation function
-  const animateCards = () => {
+  const animateCards = (): void => {
     setCards((prevCards) => {
       const viewportHeight = window.innerHeight;
       const columns = getColumnCount();
@@ -221,14 +241,16 @@ export default function FloatingTestimonialGrid() {
     setupInitialGrid();
     animationRef.current = requestAnimationFrame(animateCards);
 
-    const handleResize = () => {
+    const handleResize = (): void => {
       setupInitialGrid();
     };
 
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(animationRef.current);
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, []);
 
@@ -285,8 +307,9 @@ export default function FloatingTestimonialGrid() {
                     src={card.avatar}
                     alt={card.name}
                     className="w-10 h-10 rounded-full object-cover border-2 border-blue-500/50"
-                    onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                         card.name
                       )}&background=random`;
                     }}
