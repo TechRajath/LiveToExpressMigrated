@@ -64,11 +64,12 @@ export default function Home() {
         <div ref={sliderRef}>
           <CreativeCorner />
         </div>
+
+        <LocationSection />
+        <FloatingTestimonialCards />
         <div ref={formRef}>
           <MultiFormPage />
         </div>
-        <LocationSection />
-        <FloatingTestimonialCards />
         <Footer />
       </main>
     </>

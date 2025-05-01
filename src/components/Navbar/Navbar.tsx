@@ -138,7 +138,7 @@ const ModalGrid = ({ scrollToSection }: ModalGridProps) => {
 
               {/* CREATIVE CORNER */}
               <div
-                className="outlined-text hover:outline-hover transition-all duration-300 border border-white flex justify-start md:justify-center items-center text-5xl sm:text-7xl md:text-8xl lg:text-7xl font-black leading-none text-white font-[Poor Story] p-8 md:p-4 md:pl-4 cursor-pointer"
+                className="outlined-text hover:outline-hover transition-all duration-300 border border-white flex justify-center md:justify-start items-center text-5xl sm:text-7xl md:text-8xl lg:text-7xl font-black leading-none text-white font-[Poor Story] p-2 pt-8 pb-8 md:p-4 md:pl-4 cursor-pointer"
                 onClick={() => handleNavigation("slider")}
               >
                 <span>CREATIVE CORNER</span>

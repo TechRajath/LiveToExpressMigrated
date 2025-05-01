@@ -141,11 +141,11 @@ const Events: React.FC = () => {
   return (
     <div className="bg-black text-white p-4 md:p-6 lg:p-8 w-full">
       {/* Header with absolute positioning for the "View all" button */}
-      <div className="flex items-center justify-between mb-6">
-        {/* Heading on the left */}
+      <div className="mb-6">
+        {/* Heading in center */}
         <div className="text-center w-full">
           <h1
-            className="text-3xl xs:text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5"
+            className="text-3xl xs:text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2"
             style={{
               fontFamily: "'Poor Story', cursive",
               lineHeight: "2",
@@ -155,10 +155,10 @@ const Events: React.FC = () => {
           </h1>
         </div>
 
-        {/* "View all" button on the right */}
-        <div className="ml-4 flex-shrink-0">
+        {/* "View all" button below */}
+        <div className="text-right mt-2">
           <button
-            className="flex items-center space-x-1 text-purple-300 hover:text-purple-400 transition-colors"
+            className="flex items-center justify-center space-x-1 text-purple-300 hover:text-purple-400 transition-colors"
             style={{ fontFamily: "'Poor Story', cursive" }}
           >
             <span className="text-sm md:text-base">View all</span>
@@ -182,10 +182,10 @@ const Events: React.FC = () => {
           {eventsData.map((event, index) => (
             <div
               key={event.id}
-              className="flex-none w-64 md:w-72 mr-4 snap-start bg-black rounded-xl overflow-hidden shadow-lg"
+              className="flex-none w-64 md:w-80 lg:w-96 mr-4 snap-start bg-black rounded-xl overflow-hidden shadow-lg"
               style={{ fontFamily: "'Poor Story', cursive" }}
             >
-              <div className="relative h-40 md:h-48 lg:h-56">
+              <div className="relative h-40 md:h-52 lg:h-64">
                 <img
                   src={event.image}
                   alt={event.title}
@@ -194,15 +194,15 @@ const Events: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
               </div>
 
-              <div className="p-4">
+              <div className="p-5">
                 <div className="text-xs text-gray-400">{event.date}</div>
-                <h3 className="text-lg font-bold mt-1">{event.title}</h3>
+                <h3 className="text-xl font-bold mt-1">{event.title}</h3>
                 <div className="flex items-center mt-2 text-sm text-gray-400">
                   <span>📍</span>
                   <span className="ml-1">{event.location}</span>
                 </div>
 
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mt-5">
                   <div className="flex">
                     {[...Array(Math.min(3, event.attendees % 10))].map(
                       (_, i) => (
