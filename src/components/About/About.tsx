@@ -95,7 +95,6 @@ const About = () => {
                   opacity ?? ""
                 }`}
                 style={{
-                  fontFamily: "'Poor Story', cursive",
                   color: art.color,
                 }}
               >
@@ -115,7 +114,6 @@ const About = () => {
                    text-3xl xs:text-4xl sm:text-4xl md:text-5xl lg:text-6xl 
                    font-bold text-left max-w-full text-white"
         style={{
-          fontFamily: "'Poor Story', cursive",
           lineHeight: "1.9",
         }}
       >
