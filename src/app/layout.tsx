@@ -1,6 +1,11 @@
-import type { Metadata } from "next";
-
 import "./globals.css";
+import type { Metadata } from "next";
+import { Poor_Story } from "next/font/google";
+
+const poorStory = Poor_Story({
+  weight: "400",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "#LiveToExpress",
@@ -14,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={poorStory.className}>{children}</body>
     </html>
   );
 }
