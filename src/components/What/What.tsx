@@ -1,8 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+"use client";
 
-// Define TypeScript interfaces
+import { useState, useEffect, useRef, useCallback } from "react";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
+
 interface Video {
-  id: string;
+  id?: string;
+  videoId: string;
   title: string;
   description: string;
 }
@@ -13,6 +17,7 @@ interface YouTubePlayer {
   mute: () => void;
   unMute: () => void;
   destroy: () => void;
+  getPlayerState: () => number;
 }
 
 declare global {
@@ -41,7 +46,12 @@ declare global {
         }
       ) => YouTubePlayer;
       PlayerState: {
+        UNSTARTED: number;
         ENDED: number;
+        PLAYING: number;
+        PAUSED: number;
+        BUFFERING: number;
+        CUED: number;
       };
     };
     onYouTubeIframeAPIReady: () => void;
@@ -49,84 +59,87 @@ declare global {
 }
 
 const What = () => {
-  const [videos] = useState<Video[]>([
-    {
-      id: "JrFKltOYd6o",
-      title: "Art in Motion",
-      description: "Experience creative freedom",
-    },
-    {
-      id: "lek816sgKZQ",
-      title: "Creative Process",
-      description: "Behind the scenes look",
-    },
-    {
-      id: "DO_N7TB9o-I",
-      title: "Urban Art",
-      description: "Street art showcase",
-    },
-    {
-      id: "92bftuPqHD4",
-      title: "Digital Canvas",
-      description: "Modern art techniques",
-    },
-    {
-      id: "yWSsO00eKZ8",
-      title: "Color Explosion",
-      description: "Vibrant art collection",
-    },
-  ]);
-
+  const [videos, setVideos] = useState<Video[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [individualMutes, setIndividualMutes] = useState<boolean[]>(
-    Array(videos.length).fill(true)
-  );
-  const [loadingStates, setLoadingStates] = useState<boolean[]>(
-    Array(videos.length).fill(true)
-  );
-  const [hoverStates, setHoverStates] = useState<boolean[]>(
-    Array(videos.length).fill(false)
-  );
+  const [individualMutes, setIndividualMutes] = useState<boolean[]>([]);
+  const [loadingStates, setLoadingStates] = useState<boolean[]>([]);
+  const [hoverStates, setHoverStates] = useState<boolean[]>([]);
+  const [isApiReady, setIsApiReady] = useState(false);
 
-  const playersRef = useRef<YouTubePlayer[]>([]);
+  const playersRef = useRef<(YouTubePlayer | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Fetch videos from Firestore in real-time
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const unsubscribe = onSnapshot(
+      collection(db, "ArtInMotion"),
+      (snapshot) => {
+        const videosData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Video[];
+        setVideos(videosData);
 
-    if (window.YT && window.YT.Player) {
-      initializePlayers();
-    } else {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      const firstScriptTag = document.getElementsByTagName("script")[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+        // Initialize states based on videos
+        setIndividualMutes(Array(videosData.length).fill(true));
+        setLoadingStates(Array(videosData.length).fill(true));
+        setHoverStates(Array(videosData.length).fill(false));
+      }
+    );
 
-      window.onYouTubeIframeAPIReady = initializePlayers;
-    }
-
-    return () => {
-      playersRef.current.forEach((player) => player?.destroy?.());
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    };
+    return () => unsubscribe();
   }, []);
 
-  const initializePlayers = () => {
-    playersRef.current = videos.map((video, index) => {
-      return new window.YT.Player(`youtube-player-${index}`, {
-        videoId: video.id,
+  // Load YouTube API script
+  useEffect(() => {
+    if (videos.length === 0) return;
+
+    if (window.YT && window.YT.Player) {
+      setIsApiReady(true);
+      return;
+    }
+
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName("script")[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = () => {
+      setIsApiReady(true);
+    };
+
+    return () => {
+      if (window.onYouTubeIframeAPIReady) {
+        window.onYouTubeIframeAPIReady = () => {};
+      }
+    };
+  }, [videos.length]);
+
+  // Initialize players when API is ready and videos are loaded
+  useEffect(() => {
+    if (!isApiReady || videos.length === 0) return;
+
+    // Destroy existing players
+    playersRef.current.forEach((player) => player?.destroy?.());
+    playersRef.current = [];
+
+    // Initialize new players
+    videos.forEach((video, index) => {
+      const player = new window.YT.Player(`youtube-player-${index}`, {
+        videoId: video.videoId,
         playerVars: {
-          autoplay: 1,
+          autoplay: index === activeIndex ? 1 : 0,
           loop: 1,
           controls: 0,
           modestbranding: 1,
           mute: 1,
           playsinline: 1,
-          playlist: video.id,
+          playlist: video.videoId,
         },
         events: {
           onReady: (event) => {
+            playersRef.current[index] = event.target;
             if (index === activeIndex) {
               event.target.playVideo();
             } else {
@@ -146,7 +159,11 @@ const What = () => {
         },
       });
     });
-  };
+
+    return () => {
+      playersRef.current.forEach((player) => player?.destroy?.());
+    };
+  }, [isApiReady, videos, activeIndex]);
 
   const scrollToVideo = useCallback((index: number) => {
     setActiveIndex(index);
@@ -167,11 +184,14 @@ const What = () => {
     }, 50);
 
     playersRef.current.forEach((player, i) => {
-      if (player && i !== index) {
+      if (!player) return;
+      if (i === index) {
+        // Only play if not already playing
+        if (player.getPlayerState() !== window.YT.PlayerState.PLAYING) {
+          player.playVideo();
+        }
+      } else {
         player.pauseVideo();
-      }
-      if (player && i === index) {
-        player.playVideo();
       }
     });
   }, []);
@@ -218,11 +238,16 @@ const What = () => {
     window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
   };
 
+  if (videos.length === 0) {
+    return (
+      <div className="relative bg-black min-h-screen flex items-center justify-center">
+        <p className="text-white">Loading videos...</p>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="relative bg-black min-h-screen"
-      style={{ fontFamily: "'Poor Story', cursive" }}
-    >
+    <div className="relative bg-black min-h-screen">
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-center py-6 text-white">
         Art in Motion
       </h1>
@@ -277,7 +302,7 @@ const What = () => {
       >
         {videos.map((video, index) => (
           <div
-            key={video.id + index}
+            key={`${video.id}-${index}`}
             className="relative flex-shrink-0 rounded-xl overflow-hidden snap-center transition-all duration-300 ease-in-out w-[70vw] h-[100vw] sm:w-[400px] sm:h-[600px] border border-white opacity-80 hover:opacity-100 hover:scale-95"
             onMouseEnter={() => {
               setHoverStates((prev) => {
@@ -302,7 +327,7 @@ const What = () => {
 
             <div
               id={`youtube-player-${index}`}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full"
             />
 
             {/* Video Info Overlay */}
@@ -313,7 +338,7 @@ const What = () => {
                 </h2>
                 <p className="text-white text-sm mb-4">{video.description}</p>
                 <button
-                  onClick={() => openFullVideo(video.id)}
+                  onClick={() => openFullVideo(video.videoId)}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
                 >
                   Watch on YouTube
@@ -395,13 +420,6 @@ const What = () => {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
-        }
-
-        
-
-       
-
-        
         }
       `}</style>
     </div>

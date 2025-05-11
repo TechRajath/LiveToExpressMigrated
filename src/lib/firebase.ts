@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: "AIzaSyAOqcrb6JJchtPrnOTZMdF8o1ZMABSsaOs",
   authDomain: "livetoexpress-480fd.firebaseapp.com",
@@ -11,5 +12,8 @@ const firebaseConfig = {
   measurementId: "G-TTY08DQZXS",
 };
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-export const db = getFirestore(app);
+export { auth, db, storage };
