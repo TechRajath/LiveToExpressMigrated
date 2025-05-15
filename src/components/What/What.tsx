@@ -140,11 +140,7 @@ const What = () => {
         events: {
           onReady: (event) => {
             playersRef.current[index] = event.target;
-            if (index === activeIndex) {
-              event.target.playVideo();
-            } else {
-              event.target.pauseVideo();
-            }
+            event.target.playVideo();
             setLoadingStates((prev) => {
               const newStates = [...prev];
               newStates[index] = false;
@@ -166,7 +162,6 @@ const What = () => {
   }, [isApiReady, videos, activeIndex]);
 
   const scrollToVideo = useCallback((index: number) => {
-    setActiveIndex(index);
     const container = containerRef.current;
     if (!container) return;
 
@@ -175,25 +170,13 @@ const What = () => {
     scrollTimeoutRef.current = setTimeout(() => {
       const card = container.children[index];
       if (card) {
-        (card as HTMLElement).scrollIntoView({
+        card.scrollIntoView({
           behavior: "smooth",
           block: "nearest",
           inline: "center",
         });
       }
     }, 50);
-
-    playersRef.current.forEach((player, i) => {
-      if (!player) return;
-      if (i === index) {
-        // Only play if not already playing
-        if (player.getPlayerState() !== window.YT.PlayerState.PLAYING) {
-          player.playVideo();
-        }
-      } else {
-        player.pauseVideo();
-      }
-    });
   }, []);
 
   const toggleIndividualMute = useCallback((index: number) => {
@@ -211,11 +194,13 @@ const What = () => {
   }, []);
 
   const navigate = useCallback(
-    (direction: "prev" | "next") => {
+    (direction: string) => {
       const newIndex =
         direction === "next"
           ? (activeIndex + 1) % videos.length
           : (activeIndex - 1 + videos.length) % videos.length;
+
+      // Just scroll to the video without changing play state
       scrollToVideo(newIndex);
     },
     [activeIndex, scrollToVideo, videos.length]
@@ -332,7 +317,7 @@ const What = () => {
 
             {/* Video Info Overlay */}
             {hoverStates[index] && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-4 z-10 transition-opacity duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-4 z-10 transition-opacity duration-300">
                 <h2 className="text-white text-xl font-bold mb-2">
                   {video.title}
                 </h2>
@@ -352,54 +337,41 @@ const What = () => {
                 e.stopPropagation();
                 toggleIndividualMute(index);
               }}
-              className="absolute top-2 right-2 z-20 bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition-all"
+              className="absolute top-2 right-2 z-20 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200"
               aria-label={
                 individualMutes[index] ? "Unmute video" : "Mute video"
               }
             >
               {individualMutes[index] ? (
+                // Muted icon - improved version
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 text-white"
-                  fill="none"
                   viewBox="0 0 24 24"
+                  fill="none"
                   stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                    clipRule="evenodd"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-                  />
+                  <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
                 </svg>
               ) : (
+                // Unmuted icon - improved version
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 text-white"
-                  fill="none"
                   viewBox="0 0 24 24"
+                  fill="none"
                   stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.536 8.464a5 5 0 010 7.072M12 6a7.975 7.975 0 015.657 2.343m0 0a7.975 7.975 0 010 11.314m-11.314 0a7.975 7.975 0 010-11.314m0 0a7.975 7.975 0 015.657-2.343"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                    clipRule="evenodd"
-                  />
+                  <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
                 </svg>
               )}
             </button>

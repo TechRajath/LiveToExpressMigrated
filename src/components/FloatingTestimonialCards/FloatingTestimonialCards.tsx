@@ -166,7 +166,7 @@ export default function FloatingTestimonialGrid() {
       const cardWidth = 90 / columns;
 
       // Different speeds for each column
-      const columnSpeeds = [0.4, 0.3, 0.8]; // Adjust speeds as needed
+      const columnSpeeds = [0.3, 0.2, 0.3]; // Adjust speeds as needed
       const speed = columnSpeeds[columnIndex % columnSpeeds.length];
 
       newCards.push({
