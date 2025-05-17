@@ -25,7 +25,7 @@ export default function DashboardPage() {
       <Sidebar onSectionChange={setActiveSection} />
 
       {/* Main content */}
-      <main className="flex-1 p-4 mt-16 md:mt-0 md:ml-64">
+      <main className="flex-1 p-4 mt-16 md:mt-0 md:ml-69">
         <Content section={activeSection} />
       </main>
     </div>
