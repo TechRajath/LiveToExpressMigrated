@@ -99,7 +99,7 @@ const ModalGrid = ({ scrollToSection }: ModalGridProps) => {
 
         <button
           onClick={toggleMenu}
-          className="text-2xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl text-white border-l-2 pl-4 flex items-center justify-center"
+          className="text-2xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl text-white border-l-2 pl-4 flex items-center justify-center cursor-pointer"
           style={{
             borderColor: "white",
             height: "80px",
@@ -138,10 +138,10 @@ const ModalGrid = ({ scrollToSection }: ModalGridProps) => {
 
               {/* CREATIVE CORNER */}
               <div
-                className="outlined-text hover:outline-hover transition-all duration-300 border border-white flex justify-center md:justify-start items-center text-5xl sm:text-7xl md:text-8xl lg:text-7xl font-black leading-none text-white font-[Poor Story] p-2 pt-8 pb-8 md:p-4 md:pl-4 cursor-pointer"
+                className="outlined-text hover:outline-hover transition-all duration-300 border border-white flex justify-center items-center text-center text-5xl sm:text-7xl md:text-8xl lg:text-7xl font-black leading-none text-white font-[Poor Story] p-2 pt-8 pb-8 cursor-pointer"
                 onClick={() => handleNavigation("slider")}
               >
-                <span>CREATIVE CORNER</span>
+                <span className="whitespace-normal">CREATIVE CORNER</span>
               </div>
 
               {/* JOIN US */}
@@ -153,7 +153,7 @@ const ModalGrid = ({ scrollToSection }: ModalGridProps) => {
               </div>
 
               {/* SUBSCRIBE */}
-              <div className="border border-white flex flex-col justify-center items-start p-4">
+              <div className="border border-white flex flex-col justify-center items-center p-4">
                 {isSubmitted ? (
                   <div className="w-full bg-black px-2 py-3 text-base text-white">
                     Successfully subscribed!
@@ -184,7 +184,12 @@ const ModalGrid = ({ scrollToSection }: ModalGridProps) => {
 
               {/* MINIMALIST INSTITUTE */}
               <div className="border border-white flex flex-col justify-center items-center text-lg sm:text-xl font-extrabold p-6">
-                <a href="#" className="hover:underline text-white font-black">
+                <a
+                  href="https://www.minimalistinstitute.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline text-white font-black"
+                >
                   MINIMALIST INSTITUTE
                 </a>
               </div>

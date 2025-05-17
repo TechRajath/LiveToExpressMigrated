@@ -182,7 +182,7 @@ const Events: React.FC = () => {
           {eventsData.map((event, index) => (
             <div
               key={event.id}
-              className="flex-none w-64 md:w-80 lg:w-96 mr-4 snap-start bg-black rounded-xl overflow-hidden shadow-lg"
+              className="flex-none w-64 md:w-80 lg:w-96 mr-4 snap-start bg-black rounded-xl overflow-hidden shadow-lg cursor-pointer"
               style={{ fontFamily: "'Poor Story', cursive" }}
             >
               <div className="relative h-40 md:h-52 lg:h-64">

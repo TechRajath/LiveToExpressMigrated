@@ -288,7 +288,7 @@ const What = () => {
         {videos.map((video, index) => (
           <div
             key={`${video.id}-${index}`}
-            className="relative flex-shrink-0 rounded-xl overflow-hidden snap-center transition-all duration-300 ease-in-out w-[70vw] h-[100vw] sm:w-[400px] sm:h-[600px] border border-white opacity-80 hover:opacity-100 hover:scale-95"
+            className="relative flex-shrink-0 rounded-xl overflow-hidden snap-center transition-all duration-300 ease-in-out w-[70vw] h-[100vw] sm:w-[400px] sm:h-[600px] border border-white opacity-80 hover:opacity-100 hover:scale-95 cursor-pointer"
             onMouseEnter={() => {
               setHoverStates((prev) => {
                 const newHovers = [...prev];
@@ -324,7 +324,7 @@ const What = () => {
                 <p className="text-white text-sm mb-4">{video.description}</p>
                 <button
                   onClick={() => openFullVideo(video.videoId)}
-                  className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
+                  className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors cursor-pointer"
                 >
                   Watch on YouTube
                 </button>

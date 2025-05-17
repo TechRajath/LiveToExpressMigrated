@@ -61,11 +61,11 @@ const Footer = () => {
           </div>
 
           {/* Book a Call Button */}
-          <div className="mb-8 md:mb-0 order-3 md:order-2">
-            <button className="bg-gray-900 text-white rounded-full py-2 sm:py-3 px-4 sm:px-6 flex items-center gap-2 hover:bg-gray-800 transition-all duration-300 group">
+          <div className="mb-8 md:mb-0 order-3 md:order-2 ">
+            <button className="bg-gray-900 text-white rounded-full py-2 sm:py-3 px-4 sm:px-6 flex items-center gap-2 hover:bg-gray-800 transition-all duration-300 group cursor-pointer">
               <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                 <img
-                  src="/api/placeholder/40/40"
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHCIe6fv_xLeSSq-hX_kwbhkCspe9g1MzvEw&s"
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />

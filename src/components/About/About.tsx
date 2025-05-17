@@ -120,7 +120,7 @@ const About = () => {
         What we focus on
       </h1>
 
-      <section className="py-20 relative w-full overflow-hidden">
+      <section className="relative w-full overflow-hidden">
         {/* Fine Arts */}
         {renderArtCategory(fineArts, marqueeVariants)}
 

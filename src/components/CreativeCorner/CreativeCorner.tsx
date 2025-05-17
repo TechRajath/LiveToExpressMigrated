@@ -178,7 +178,7 @@ const CreativeCorner: React.FC = () => {
   return (
     <div className="bg-black w-full py-8 px-4 md:py-12 md:px-8 overflow-hidden">
       <h1
-        className="text-white text-4xl md:text-5xl lg:text-6xl font-bold text-center mb-12"
+        className="text-white text-4xl md:text-5xl lg:text-6xl font-bold text-center mb-3"
         style={{
           fontFamily: "'Poor Story', cursive",
           lineHeight: "1.2",
@@ -208,7 +208,7 @@ const CreativeCorner: React.FC = () => {
         <div className="flex md:hidden justify-center gap-8 mb-6">
           <button
             onClick={() => scrollToIndex(Math.max(centerIndex - 1, 0))}
-            className="bg-transparent text-white border border-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-white hover:text-black"
+            className="bg-transparent text-white border border-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-white hover:text-black cursor-pointer"
           >
             <ChevronLeft size={24} />
           </button>
@@ -216,7 +216,7 @@ const CreativeCorner: React.FC = () => {
             onClick={() =>
               scrollToIndex(Math.min(centerIndex + 1, images.length - 1))
             }
-            className="bg-transparent text-white border border-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-white hover:text-black"
+            className="bg-transparent text-white border border-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-white hover:text-black cursor-pointer"
           >
             <ChevronRight size={24} />
           </button>
@@ -232,7 +232,7 @@ const CreativeCorner: React.FC = () => {
             {images.map((src, index) => (
               <div
                 key={index}
-                className="carousel-item relative transition-transform duration-500 ease-in-out"
+                className="carousel-item relative transition-transform duration-500 ease-in-out cursor-pointer"
                 style={{
                   transform:
                     index === centerIndex

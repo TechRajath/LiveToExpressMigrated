@@ -99,6 +99,9 @@ const Form = () => {
         fontFamily: "'Poor Story', cursive",
       }}
     >
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-center py-10 text-white">
+        Join Us
+      </h1>
       <ToastContainer />
       <div className="flex flex-col md:flex-row justify-between items-start mb-8">
         <p className="text-1xl sm:text-1xl md:text-2xl text-white font-normal capitalize mb-8 mx-auto text-left max-w-3xl">
@@ -114,7 +117,7 @@ const Form = () => {
             onClick={() =>
               setFormData({ ...formData, selectedType: "Express It" })
             }
-            className={`px-6 py-2 rounded-full text-lg transition-colors font-normal capitalize ${
+            className={`px-6 py-2 rounded-full text-lg transition-colors font-normal cursor-pointer capitalize ${
               formData.selectedType === "Express It"
                 ? "bg-white text-black"
                 : "bg-gray-700 text-white"
@@ -127,7 +130,7 @@ const Form = () => {
             onClick={() =>
               setFormData({ ...formData, selectedType: "Experience It" })
             }
-            className={`px-6 py-2 rounded-full text-lg transition-colors font-normal capitalize ${
+            className={`px-6 py-2 rounded-full text-lg transition-colors cursor-pointer font-normal capitalize ${
               formData.selectedType === "Experience It"
                 ? "bg-white text-black"
                 : "bg-gray-700 text-white"
@@ -218,7 +221,7 @@ const Form = () => {
           <div className="flex justify-center">
             <button
               type="submit"
-              className="px-6 py-2 bg-white text-black text-base sm:text-lg md:text-2xl transition-colors font-normal capitalize hover:bg-gray-200"
+              className="px-6 py-2 bg-white text-black text-base sm:text-lg md:text-2xl transition-colors font-normal cursor-pointer capitalize hover:bg-gray-200"
             >
               Submit
             </button>
