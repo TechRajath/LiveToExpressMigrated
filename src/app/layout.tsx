@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Poor_Story } from "next/font/google";
+import ReactQueryProvider from "@/providers/react-query-provider";
 
 const poorStory = Poor_Story({
   weight: "400",
@@ -19,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={poorStory.className}>{children}</body>
+      <body className={poorStory.className}>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </body>
     </html>
   );
 }

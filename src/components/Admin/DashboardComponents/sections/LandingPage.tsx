@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db, storage } from "@/lib/firebase";
 import {
   collection,
@@ -16,104 +17,247 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 
+interface LandingImage {
+  id: string;
+  imageUrl: string;
+  uploadedAt: any;
+}
+
 export default function LandingPage() {
-  const [images, setImages] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [files, setFiles] = useState<FileList | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<null | string>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [deletingAll, setDeletingAll] = useState(false);
 
-  const fetchImages = async () => {
-    const snapshot = await getDocs(collection(db, "LandingPage"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setImages(data);
-  };
+  // Fetch images with React Query
+  const { data: images = [], isLoading } = useQuery<LandingImage[]>({
+    queryKey: ["landing-page"],
+    queryFn: async () => {
+      const snapshot = await getDocs(collection(db, "LandingPage"));
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as LandingImage[];
+    },
+    staleTime: 12 * 60 * 60 * 1000, // 12 hours cache
+  });
 
-  useEffect(() => {
-    fetchImages();
-  }, []);
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!files) return;
 
-  const handleUpload = async () => {
-    if (!files) return;
-    const uploads = Array.from(files).map(async (file) => {
-      if (file.type !== "image/webp") return;
-      const storageRef = ref(storage, `LandingPage/${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      await addDoc(collection(db, "LandingPage"), {
-        imageUrl: url,
-        uploadedAt: serverTimestamp(),
+      const uploads = Array.from(files).map(async (file) => {
+        if (file.type !== "image/webp") return;
+        const storageRef = ref(storage, `LandingPage/${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        await addDoc(collection(db, "LandingPage"), {
+          imageUrl: url,
+          uploadedAt: serverTimestamp(),
+        });
       });
-    });
-    await Promise.all(uploads);
-    setFiles(null);
-    setSuccessMessage("Images uploaded successfully.");
-    fetchImages();
-  };
 
-  const handleDelete = async (id: string, url: string) => {
-    await deleteDoc(doc(db, "LandingPage", id));
-    const storageRef = ref(
-      storage,
-      decodeURIComponent(new URL(url).pathname.split("/o/")[1].split("?")[0])
-    );
-    await deleteObject(storageRef);
+      await Promise.all(uploads);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["landing-page"] });
+      setFiles(null);
+      setSuccessMessage("Images uploaded successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+    onError: () => {
+      setSuccessMessage("Error uploading images.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async ({ id, url }: { id: string; url: string }) => {
+      await deleteDoc(doc(db, "LandingPage", id));
+      const storageRef = ref(
+        storage,
+        decodeURIComponent(new URL(url).pathname.split("/o/")[1].split("?")[0])
+      );
+      await deleteObject(storageRef);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["landing-page"] });
+      setSuccessMessage("Image deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+    onError: () => {
+      setSuccessMessage("Error deleting image.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+  });
+
+  // Delete all mutation
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const deletePromises = images.map((img) =>
+        deleteMutation.mutateAsync({ id: img.id, url: img.imageUrl })
+      );
+      await Promise.all(deletePromises);
+    },
+    onSuccess: () => {
+      setSuccessMessage("All images deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+  });
+
+  const handleDelete = (id: string, url: string) => {
+    deleteMutation.mutate({ id, url });
     setConfirmDelete(null);
-    fetchImages();
   };
 
-  const handleDeleteAll = async () => {
-    setDeletingAll(true);
-    for (const img of images) {
-      await handleDelete(img.id, img.imageUrl);
-    }
-    setDeletingAll(false);
+  const handleDeleteAll = () => {
+    deleteAllMutation.mutate();
+    setConfirmDeleteAll(false);
+  };
+
+  const handleUpload = () => {
+    uploadMutation.mutate();
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-3xl font-bold">#LiveToExpress Landing Page</h2>
+    <div className="container mx-auto px-4 py-8 ">
+      {/* Main Heading */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          #LiveToExpress Landing Page
+        </h1>
+        <p className="text-lg text-gray-600">
+          Manage your landing page content
+        </p>
+      </div>
 
-      <h3 className="text-xl">Contents Already on Website</h3>
-      {images.length === 0 ? (
-        <p>No content present.</p>
-      ) : (
-        <>
+      {/* Upload Section */}
+      <div className="bg-white p-6 rounded-lg shadow-md  mb-8">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Upload New Content
+        </h2>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer">
+            Choose Images (WEBP format only)
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/webp"
+            onChange={(e) => setFiles(e.target.files)}
+            className="block w-full text-sm text-gray-500 cursor-pointer
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100"
+          />
+        </div>
+
+        <div className="flex justify-end">
           <button
-            onClick={handleDeleteAll}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            disabled={deletingAll}
+            onClick={handleUpload}
+            disabled={!files || files.length === 0 || uploadMutation.isPending}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
           >
-            Delete All
+            {uploadMutation.isPending ? (
+              "Uploading..."
+            ) : (
+              <>
+                <Upload size={18} />
+                Upload
+              </>
+            )}
           </button>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            {images.map((img) => (
-              <div key={img.id} className="relative">
-                <img src={img.imageUrl} alt="" className="rounded shadow" />
-                <button
-                  onClick={() => setConfirmDelete(img.id)}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+        </div>
+      </div>
+      {/* Current Content Section */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Current Content
+        </h2>
 
-      {/* Confirm Delete Modal */}
-      <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
-        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow max-w-sm w-full">
-            <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
-            <div className="flex justify-end gap-2">
+        {isLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading content...</p>
+          </div>
+        ) : images.length === 0 ? (
+          <div className="text-center py-8 bg-white rounded-lg shadow">
+            <p className="text-gray-500">No content yet.</p>
+          </div>
+        ) : (
+          <>
+            {/* Delete All Button */}
+            <div className="flex justify-end mb-6">
+              <button
+                onClick={() => setConfirmDeleteAll(true)}
+                disabled={deleteAllMutation.isPending}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
+              >
+                {deleteAllMutation.isPending ? (
+                  "Deleting..."
+                ) : (
+                  <>
+                    <Trash2 size={18} />
+                    Delete All
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Images Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {images.map((img) => (
+                <div
+                  key={img.id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative"
+                >
+                  <img
+                    src={img.imageUrl}
+                    alt="Landing page content"
+                    className="w-full h-48 object-cover cursor-pointer"
+                    onClick={() => window.open(img.imageUrl, "_blank")}
+                  />
+                  <button
+                    onClick={() => setConfirmDelete(img.id)}
+                    disabled={deleteMutation.isPending}
+                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center p-4">
+          <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <Dialog.Title className="text-lg font-semibold mb-4">
+              Confirm Deletion
+            </Dialog.Title>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this item? This action cannot be
+              undone.
+            </p>
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
               >
                 Cancel
               </button>
@@ -122,35 +266,62 @@ export default function LandingPage() {
                   const item = images.find((i) => i.id === confirmDelete);
                   if (item) handleDelete(item.id, item.imageUrl);
                 }}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
               >
-                Delete
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </button>
             </div>
-          </div>
+          </Dialog.Panel>
         </div>
       </Dialog>
 
-      <h3 className="text-xl">Upload Content into Website</h3>
-      <p className="text-sm text-gray-600">* Only upload .webp images</p>
-
-      <input
-        type="file"
-        multiple
-        accept="image/webp"
-        onChange={(e) => setFiles(e.target.files)}
-        className="mt-2 block"
-      />
-
-      <button
-        onClick={handleUpload}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      {/* Delete All Confirmation Dialog */}
+      <Dialog
+        open={confirmDeleteAll}
+        onClose={() => setConfirmDeleteAll(false)}
+        className="relative z-50"
       >
-        Upload
-      </button>
+        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center p-4">
+          <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <Dialog.Title className="text-lg font-semibold mb-4">
+              Delete All Items?
+            </Dialog.Title>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete all items. This action cannot be
+              undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDeleteAll(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                disabled={deleteAllMutation.isPending}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:bg-red-400"
+              >
+                {deleteAllMutation.isPending ? (
+                  "Deleting..."
+                ) : (
+                  <>
+                    <Trash2 size={18} />
+                    Delete All
+                  </>
+                )}
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
 
+      {/* Success Message */}
       {successMessage && (
-        <p className="text-green-600 mt-2">{successMessage}</p>
+        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+          {successMessage}
+        </div>
       )}
     </div>
   );
