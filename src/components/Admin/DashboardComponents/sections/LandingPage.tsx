@@ -165,7 +165,7 @@ export default function LandingPage() {
           <button
             onClick={handleUpload}
             disabled={!files || files.length === 0 || uploadMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 cursor-pointer text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
           >
             {uploadMutation.isPending ? (
               "Uploading..."
