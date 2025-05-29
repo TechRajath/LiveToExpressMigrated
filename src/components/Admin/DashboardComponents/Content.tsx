@@ -3,6 +3,7 @@ import ArtInMotion from "./sections/ArtInMotion";
 import CreativeCorner from "./sections/CreativeCorner";
 import Location from "./sections/Location";
 import LandingPage from "./sections/LandingPage";
+import Events from "./sections/Events";
 
 export default function Content({ section }: { section: string }) {
   switch (section) {
@@ -14,6 +15,8 @@ export default function Content({ section }: { section: string }) {
       return <CreativeCorner />;
     case "Location":
       return <Location />;
+    case "Events":
+      return <Events />;
     case "Home":
     default:
       return <Home />;

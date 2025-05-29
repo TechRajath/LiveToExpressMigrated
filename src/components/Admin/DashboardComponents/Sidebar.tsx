@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  CalendarDays,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -51,6 +52,7 @@ export default function CollapsibleSidebar({ onSectionChange }: SidebarProps) {
     { name: "Art in Motion", icon: <Palette size={24} /> },
     { name: "Creative Corner", icon: <Brush size={24} /> },
     { name: "Location", icon: <MapPin size={24} /> },
+    { name: "Events", icon: <CalendarDays size={24} /> },
   ];
 
   const toggleSidebar = () => {

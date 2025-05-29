@@ -1,123 +1,74 @@
-import { useState, useEffect, useRef, RefObject } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowRight } from "lucide-react";
-
-// Type for each event
+//import { useRouter } from "next/router";
+import Link from "next/link";
 interface EventData {
-  id: number;
+  id: string;
   title: string;
   date: string;
-  location: string;
-  attendees: number;
-  tags: string[];
-  image: string;
+  time: string;
+  totalTickets: number;
+  images: { url: string }[];
 }
 
-// Sample event data with tags
-const eventsData: EventData[] = [
-  {
-    id: 1,
-    title: "Birthday Event",
-    date: "5th August 2024",
-    location: "Los Angeles, USA",
-    attendees: 28,
-    tags: ["#party", "#celebration"],
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQV-Pmitjpb6QSnGa7bmYhDbklri1usqUZRiA&s",
-  },
-  {
-    id: 2,
-    title: "Music Festival",
-    date: "12th August 2024",
-    location: "San Francisco, USA",
-    attendees: 124,
-    tags: ["#music", "#arts"],
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzKzccO6FA_ogUCFo5n6TeUGvW6FVyuBXL9PK1aBx1fZJ7SkozuZ8EXneVEFs3God5fZE&usqp=CAU",
-  },
-  {
-    id: 3,
-    title: "Tech Conference",
-    date: "18th August 2024",
-    location: "New York, USA",
-    attendees: 85,
-    tags: ["#tech", "#business"],
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRchbXSjRQTL1853VH_GdjK8KB1Synfd2Uwdw&s",
-  },
-  {
-    id: 4,
-    title: "Art Exhibition",
-    date: "22nd August 2024",
-    location: "Chicago, USA",
-    attendees: 42,
-    tags: ["#art", "#culture"],
-    image:
-      "https://images.stockcake.com/public/2/3/9/2397d77f-af92-4b51-8bb9-d60d138cf4d0_large/vibrant-art-exhibition-stockcake.jpg",
-  },
-  {
-    id: 5,
-    title: "Comedy Night",
-    date: "27th August 2024",
-    location: "Austin, USA",
-    attendees: 56,
-    tags: ["#comedy", "#entertainment"],
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQP3LUP-jibsnIq17HTQax3PX6-D2IvfOOaoQ&s",
-  },
-  {
-    id: 6,
-    title: "Food Festival",
-    date: "3rd September 2024",
-    location: "Seattle, USA",
-    attendees: 93,
-    tags: ["#food", "#culture"],
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQLTdj3LNvCCTBj1RV_Ugmu7l0kT-uTo1XQnzwl7g1Fo_UZwKOQ1El9AyJ8v88gv8QAYg&usqp=CAU",
-  },
-];
-
-// Props for Avatar component
-interface AvatarProps {
-  index: number;
-}
-
-// Avatar component for attendees
-const Avatar: React.FC<AvatarProps> = ({ index }) => {
-  const colors = [
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-yellow-500",
-    "bg-red-500",
-    "bg-purple-500",
-  ];
-
-  return (
-    <div
-      className={`${
-        colors[index % colors.length]
-      } h-6 w-6 rounded-full flex items-center justify-center text-xs text-white border border-gray-800`}
-      style={{
-        marginLeft: index > 0 ? "-8px" : "0",
-        fontFamily: "'Poor Story', cursive",
-      }}
-    >
-      {index + 1}
-    </div>
-  );
-};
-
-const Events: React.FC = () => {
-  const carouselRef: RefObject<HTMLDivElement | null> = useRef(null);
+const Events = () => {
+  const carouselRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [events, setEvents] = useState<EventData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  //const router = useRouter();
+  // Fetch events from API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/events?status=upcoming",
+          {
+            headers: {
+              "x-api-key": "e484b3f8-c6bd-4e0d-ae58-7ae402fadba4",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch events: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.data)) {
+          throw new Error("Invalid API response format");
+        }
+
+        const formattedEvents = result.data.map((event: any) => ({
+          id: event.id,
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          totalTickets: event.totalTickets,
+          images: event.images || [],
+        }));
+
+        setEvents(formattedEvents);
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        setError(err instanceof Error ? err.message : "Failed to load events");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   // Auto slide functionality
   useEffect(() => {
-    if (!isPaused) {
+    if (!isPaused && events.length > 0) {
       const interval = setInterval(() => {
         setCurrentIndex((prevIndex) => {
-          const nextIndex =
-            prevIndex < eventsData.length - 1 ? prevIndex + 1 : 0;
+          const nextIndex = prevIndex < events.length - 1 ? prevIndex + 1 : 0;
 
           if (carouselRef.current && carouselRef.current.children[nextIndex]) {
             const child = carouselRef.current.children[
@@ -136,7 +87,31 @@ const Events: React.FC = () => {
 
       return () => clearInterval(interval);
     }
-  }, [isPaused, eventsData.length]);
+  }, [isPaused, events]);
+
+  if (loading) {
+    return (
+      <div className="bg-black text-white p-8 w-full flex justify-center">
+        <div className="animate-pulse">Loading events...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-black text-white p-8 w-full text-center">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="bg-black text-white p-8 w-full text-center">
+        No upcoming events found
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black text-white p-4 md:p-6 lg:p-8 w-full">
@@ -179,65 +154,101 @@ const Events: React.FC = () => {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {eventsData.map((event, index) => (
-            <div
-              key={event.id}
-              className="flex-none w-64 md:w-80 lg:w-96 mr-4 snap-start bg-black rounded-xl overflow-hidden shadow-lg cursor-pointer"
-              style={{ fontFamily: "'Poor Story', cursive" }}
-            >
-              <div className="relative h-40 md:h-52 lg:h-64">
-                <img
-                  src={event.image}
-                  alt={event.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-              </div>
-
-              <div className="p-5">
-                <div className="text-xs text-gray-400">{event.date}</div>
-                <h3 className="text-xl font-bold mt-1">{event.title}</h3>
-                <div className="flex items-center mt-2 text-sm text-gray-400">
-                  <span>📍</span>
-                  <span className="ml-1">{event.location}</span>
+          {events.map((event, index) => (
+            <Link href={`/event/${event.id}`} key={event.id}>
+              <div
+                key={event.id}
+                //onClick={() => router.push(`/event/${event.id}`)}
+                className="flex-none w-64 md:w-80 lg:w-96 mr-4 snap-start bg-black rounded-xl overflow-hidden shadow-lg cursor-pointer"
+                style={{ fontFamily: "'Poor Story', cursive" }}
+              >
+                <div className="relative h-40 md:h-52 lg:h-64">
+                  {event.images.length > 0 && (
+                    <>
+                      <img
+                        src={event.images[0].url}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    </>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between mt-5">
-                  <div className="flex">
-                    {[...Array(Math.min(3, event.attendees % 10))].map(
-                      (_, i) => (
-                        <Avatar key={i} index={i} />
-                      )
-                    )}
-                    {event.attendees > 3 && (
-                      <div
-                        className="bg-gray-700 h-6 w-8 rounded-full flex items-center justify-center text-xs text-white border border-gray-800 ml-1"
-                        style={{ fontFamily: "'Poor Story', cursive" }}
-                      >
-                        +{event.attendees - 3}
+                <div className="p-5">
+                  <div className="text-xs text-gray-400">
+                    {new Date(event.date).toLocaleDateString("en-US", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
+                  <h3 className="text-xl font-bold mt-1">{event.title}</h3>
+                  <div className="flex items-center mt-2 text-sm text-gray-400">
+                    <span>📍</span>
+                    <span className="ml-1">Cafe Loaction </span>{" "}
+                    {/* Hardcoded location */}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-5">
+                    {/* Spot indicator - shows attendee avatars */}
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-400 mr-2">Spot:</span>
+                      <div className="flex">
+                        {[...Array(Math.min(3, event.totalTickets))].map(
+                          (_, i) => (
+                            <div
+                              key={i}
+                              className={`h-6 w-6 rounded-full flex items-center justify-center text-xs text-white border border-gray-800`}
+                              style={{
+                                marginLeft: i > 0 ? "-8px" : "0",
+                                backgroundColor: [
+                                  "#3b82f6",
+                                  "#10b981",
+                                  "#f59e0b",
+                                ][i % 3], // blue, green, yellow
+                                fontFamily: "'Poor Story', cursive",
+                                zIndex: 3 - i, // Ensures proper stacking
+                              }}
+                            >
+                              {i + 1}
+                            </div>
+                          )
+                        )}
+                        {event.totalTickets > 3 && (
+                          <div
+                            className="bg-gray-700 h-6 w-8 rounded-full flex items-center justify-center text-xs text-white border border-gray-800 ml-1"
+                            style={{
+                              fontFamily: "'Poor Story', cursive",
+                              zIndex: 1,
+                            }}
+                          >
+                            +{event.totalTickets - 3}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex gap-1">
-                    {event.tags.map((tag, i) => (
-                      <span
-                        key={i}
-                        className="bg-purple-900/50 px-2 py-1 text-xs text-purple-300 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                    <div className="flex gap-1">
+                      {["#event", "#popular"].map((tag, i) => (
+                        <span
+                          key={i}
+                          className="bg-purple-900/50 px-2 py-1 text-xs text-purple-300 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* Indicators */}
         <div className="flex justify-center mt-4 space-x-2">
-          {eventsData.map((_, index) => (
+          {events.map((_, index) => (
             <button
               key={index}
               className={`h-2 rounded-full transition-all ${
