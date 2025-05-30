@@ -9,6 +9,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { eventInput } from "@/models/event";
 
@@ -84,4 +85,14 @@ export async function incrementTicketsSold(
     console.error("Error incrementing ticketsSold:", error);
     throw error;
   }
+}
+
+export async function deleteEventById(eventId: string): Promise<boolean> {
+  const docRef = doc(db, "event", eventId);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) return false;
+
+  await deleteDoc(docRef);
+  return true;
 }
